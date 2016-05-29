@@ -16,11 +16,13 @@ export class Decorators {
     this.validator = new Validator(this)
      .ensure('model.firstName')
      .required()
+     .length({minimum: 5, maximum: 20})
+     .ensure('model.lastName')
+     .required()
      .length({minimum: 5, maximum: 20});
 
     this.reporter = ValidationEngine.getValidationReporter(this);
     this.subscriber = this.reporter.subscribe(result => {
-      console.log(result);
       this.renderErrors(result);
     });
   }

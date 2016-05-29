@@ -1,4 +1,5 @@
 <template>
+  <require from="./md-input"></require>
   <form class="container">
     <ul class="list-unstyled">
       <li repeat.for="error of errors">
@@ -8,7 +9,14 @@
     <div>
       <label class="form-group">
         <strong>First Name</strong>
-        <input class="form-control" value.bind="model.firstName & validate" />
+        <!-- <input class="form-control" value.bind="model.firstName & validate" /> -->
+        <md-input ref="firstName" md-value.two-way="model.firstName & validate:firstName"></md-input>
+      </label>
+    </div>
+    <div>
+      <label class="form-group">
+        <strong>Last Name</strong>
+        <input class="form-control" value.bind="model.lastName & validate" />
       </label>
     </div>
     <!-- <div>

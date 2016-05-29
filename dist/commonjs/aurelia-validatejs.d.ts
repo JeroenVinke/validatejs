@@ -68,7 +68,7 @@ declare module 'aurelia-validatejs' {
   export function observeProperty(target: any, key: any, descriptor: any): any;
   export class ValidateBindingBehavior {
     constructor(renderer: any);
-    bind(binding: any, source: any): any;
+    bind(binding: any, source: any, elem: any): any;
     unbind(binding: any, source: any): any;
     
     // TODO: destroy yourself, gracefully

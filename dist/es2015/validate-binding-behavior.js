@@ -9,19 +9,18 @@ export let ValidateBindingBehavior = (_dec = inject(ValidationRenderer), _dec(_c
   constructor(renderer) {
     this.renderer = renderer;
   }
-  bind(binding, source) {
+  bind(binding, source, elem) {
     let targetProperty;
     let target;
     let reporter;
     targetProperty = this.getTargetProperty(binding);
     target = this.getPropertyContext(source, targetProperty);
-
     reporter = this.getReporter(target);
     reporter.subscribe(errors => {
       let relevantErrors = errors.filter(error => {
         return error.propertyName === targetProperty;
       });
-      this.renderer.renderErrors(binding.target, relevantErrors);
+      this.renderer.renderErrors(elem ? elem : binding.target, relevantErrors);
     });
   }
   unbind(binding, source) {}

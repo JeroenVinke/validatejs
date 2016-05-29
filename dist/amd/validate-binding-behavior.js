@@ -21,7 +21,7 @@ define(['exports', './validation-renderer', 'aurelia-dependency-injection', './v
       this.renderer = renderer;
     }
 
-    ValidateBindingBehavior.prototype.bind = function bind(binding, source) {
+    ValidateBindingBehavior.prototype.bind = function bind(binding, source, elem) {
       var _this = this;
 
       var targetProperty = void 0;
@@ -29,13 +29,12 @@ define(['exports', './validation-renderer', 'aurelia-dependency-injection', './v
       var reporter = void 0;
       targetProperty = this.getTargetProperty(binding);
       target = this.getPropertyContext(source, targetProperty);
-
       reporter = this.getReporter(target);
       reporter.subscribe(function (errors) {
         var relevantErrors = errors.filter(function (error) {
           return error.propertyName === targetProperty;
         });
-        _this.renderer.renderErrors(binding.target, relevantErrors);
+        _this.renderer.renderErrors(elem ? elem : binding.target, relevantErrors);
       });
     };
 
