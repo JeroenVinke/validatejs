@@ -4,21 +4,23 @@ import {ValidationError} from 'aurelia-validation';
 export class ValidationRule {
   name = '';
   config;
-  constructor(name, config) {
+  constructor(name, config, validateJS = true) {
     this.name = name;
     this.config = config;
+    this.validateJS = validateJS;
   }
   validate(target, propName) {
-    if (target && propName) {
+    if (target && propName && this.validateJS) {
       let validator = { [propName]: { [this.name]: this.config } };
       let result = validate(target, validator);
       if (result) {
         let error = cleanResult(result);
-        result = new ValidationError(error);
+        result = new ValidationError(Object.assign(error, { rule: this.name }));
       }
       return result;
+    } else if (!target || !propName) {
+      throw new Error('Invalid target or property name.');
     }
-    throw new Error('Invalid target or property name.');
   }
   static date(config = true) {
     return new ValidationRule('date', config);
@@ -52,6 +54,9 @@ export class ValidationRule {
   }
   static url(config = true) {
     return new ValidationRule('url', config);
+  }
+  static errorHandler(callback) {
+    return new ValidationRule('errorHandler', callback, false);
   }
 }
 
