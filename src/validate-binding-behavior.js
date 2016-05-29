@@ -27,8 +27,10 @@ export class ValidateBindingBehavior {
   }
   getTargetProperty(binding) {
     let targetProperty;
-    if (binding.sourceExpression && binding.sourceExpression.expression && binding.sourceExpression.expression.name) {
-      targetProperty = binding.sourceExpression.expression.name;
+    let expr = binding.sourceExpression.expression;
+    while (expr) {
+      targetProperty = expr.name + (targetProperty ? '.' + targetProperty : '');
+      expr = expr.object;
     }
     return targetProperty;
   }
