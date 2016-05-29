@@ -8,7 +8,7 @@ export class ValidateBindingBehavior {
   constructor(renderer) {
     this.renderer = renderer;
   }
-  bind(binding, source) {
+  bind(binding, source, elem) {
     let targetProperty;
     let target;
     let reporter;
@@ -19,7 +19,7 @@ export class ValidateBindingBehavior {
       let relevantErrors = errors.filter(error => {
         return error.propertyName === targetProperty;
       });
-      this.renderer.renderErrors(binding.target, relevantErrors);
+      this.renderer.renderErrors(elem ? elem : binding.target, relevantErrors);
     });
   }
   unbind(binding, source) {
