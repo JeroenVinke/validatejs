@@ -1,0 +1,22 @@
+<template>
+  <form class="container">
+    <ul class="list-unstyled">
+      <li repeat.for="error of errors">
+        <span class="text-danger">${error.message}</span>
+      </li>
+    </ul>
+    <div>
+      <label class="form-group">
+        <strong>First Name</strong>
+        <input class="form-control" value.bind="model.firstName & validate" />
+      </label>
+    </div>
+    <div>
+      <label class="form-group">
+        <strong>Last Name</strong>
+        <input class="form-control" value.bind="model.lastName & validate" />
+      </label>
+    </div>
+    <button click.trigger="submit()">Submit</button>
+  </form>
+</template>
