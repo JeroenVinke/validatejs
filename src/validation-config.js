@@ -9,12 +9,37 @@ export class ValidationConfig {
       if (!key || key === rule.key) {
         let result = rule.rule.validate(instance, rule.key);
         if (result) {
-          errors.push(result);
+          errors.push(this.translateError(result));
         }
       }
     });
     reporter.publish(errors);
     return errors;
+  }
+  translateError(error) {
+    let service = this.getTranslationService(error.propertyName);
+    if (service) {
+      let msg = service(error);
+      if (msg) { // if null/undefined is returned, keep the default message
+        error.message = msg;
+      }
+    }
+    return error;
+  }
+  getTranslationService(key) {
+    // is there an errorHandler rule for this key?
+    // .errorHandler(error => return something)
+    let errorHandler = this.__validationRules__.find(r => r.key === key && r.rule.name === 'errorHandler');
+    if (errorHandler) {
+      errorHandler = errorHandler.rule.config;
+    } else {
+      // check if a global translation callback has been set in the configBuilder
+      let configBuilder = ValidationConfig.prototype.configBuilder;
+      if (configBuilder.translationCallback) {
+        errorHandler = configBuilder.translationCallback;
+      }
+    }
+    return errorHandler;
   }
   getValidationRules() {
     return this.__validationRules__ || (this.__validationRules__ = aggregateValidationRules(this));

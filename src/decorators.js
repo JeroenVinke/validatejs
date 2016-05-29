@@ -48,3 +48,7 @@ export function url(targetOrConfig, key, descriptor) {
 export function numericality(targetOrConfig, key, descriptor) {
   return base(targetOrConfig, key, descriptor, ValidationRule.numericality);
 }
+
+export function errorHandler(targetOrConfig, key, descriptor) {
+  return base(targetOrConfig, key, descriptor, ValidationRule.errorHandler);
+}
