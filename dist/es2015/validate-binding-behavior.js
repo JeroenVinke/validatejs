@@ -15,6 +15,7 @@ export let ValidateBindingBehavior = (_dec = inject(ValidationRenderer), _dec(_c
     let reporter;
     targetProperty = this.getTargetProperty(binding);
     target = this.getPropertyContext(source, targetProperty);
+
     reporter = this.getReporter(target);
     reporter.subscribe(errors => {
       let relevantErrors = errors.filter(error => {
@@ -26,8 +27,10 @@ export let ValidateBindingBehavior = (_dec = inject(ValidationRenderer), _dec(_c
   unbind(binding, source) {}
   getTargetProperty(binding) {
     let targetProperty;
-    if (binding.sourceExpression && binding.sourceExpression.expression && binding.sourceExpression.expression.name) {
-      targetProperty = binding.sourceExpression.expression.name;
+    let expr = binding.sourceExpression.expression;
+    while (expr) {
+      targetProperty = expr.name + (targetProperty ? '.' + targetProperty : '');
+      expr = expr.object;
     }
     return targetProperty;
   }

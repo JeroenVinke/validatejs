@@ -6,7 +6,7 @@ var paths = require('../paths');
 // this task utilizes the browsersync plugin
 // to create a dev server instance
 // at http://localhost:9000
-gulp.task('serve', ['build'], function(done) {
+gulp.task('serve', ['build-all'], function(done) {
   var bs = browserSync.create('Sample server');
 
   bs.init({

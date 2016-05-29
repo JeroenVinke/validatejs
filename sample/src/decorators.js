@@ -1,6 +1,6 @@
 import {inject} from 'aurelia-framework';
 import {length, required, date, datetime, email, equality, exclusion, inclusion, format, url, numericality} from 'aurelia-validatejs';
-import {ValidationEngine} from 'aurelia-validatejs';
+import {ValidationEngine, Validator} from 'aurelia-validatejs';
 
 export class Decorators {
   model;
@@ -8,20 +8,30 @@ export class Decorators {
   subscriber;
   constructor() {
     this.model = new Model();
-    this.reporter = ValidationEngine.getValidationReporter(this.model);
+    // this.validator = new Validator(this.model)
+    //  .ensure('firstName')
+    //  .required()
+    //  .length({minimum: 5, maximum: 20});
+
+    this.validator = new Validator(this)
+     .ensure('model.firstName')
+     .required()
+     .length({minimum: 5, maximum: 20});
+
+    this.reporter = ValidationEngine.getValidationReporter(this);
     this.subscriber = this.reporter.subscribe(result => {
+      console.log(result);
       this.renderErrors(result);
     });
   }
   detached() {
     this.subscriber.dispose();
   }
+  attached() {
+    this.validator.validate();
+  }
   submit() {
-    if (!this.hasErrors()) {
-      alert('Submitted successfully');
-    } else {
-      alert('Form has errors');
-    }
+    this.validator.validate();
   }
   hasErrors() {
     return !!this.errors.length;
@@ -35,16 +45,4 @@ export class Decorators {
 }
 
 class Model {
-  @length({ minimum: 5, maximum: 25 }) firstName = 'Luke';
-  @required lastName = 'Skywalker';
-  // @date lastUpdated = new Date();
-  // @datetime lastTimeUpdated = new Date();
-  @email email = 'luke@skywalker.net';
-  @length({ minimum: 5, maximum: 25 }) password = 'equal';
-  @equality('password') confirmPassword = 'equal';
-  @inclusion(['blue', 'red']) blueOrRed = 'yellow';
-  @exclusion(['male']) gender = 'male';
-  @url website = 'http://www.google.com';
-  @numericality({ onlyInteger: true, lessThan: 115, greaterThan: 0 }) age = 25;
-  @format(/\d{5}(-\d{4})?/) zipCode = '12345';
 }

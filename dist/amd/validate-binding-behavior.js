@@ -29,6 +29,7 @@ define(['exports', './validation-renderer', 'aurelia-dependency-injection', './v
       var reporter = void 0;
       targetProperty = this.getTargetProperty(binding);
       target = this.getPropertyContext(source, targetProperty);
+
       reporter = this.getReporter(target);
       reporter.subscribe(function (errors) {
         var relevantErrors = errors.filter(function (error) {
@@ -42,8 +43,10 @@ define(['exports', './validation-renderer', 'aurelia-dependency-injection', './v
 
     ValidateBindingBehavior.prototype.getTargetProperty = function getTargetProperty(binding) {
       var targetProperty = void 0;
-      if (binding.sourceExpression && binding.sourceExpression.expression && binding.sourceExpression.expression.name) {
-        targetProperty = binding.sourceExpression.expression.name;
+      var expr = binding.sourceExpression.expression;
+      while (expr) {
+        targetProperty = expr.name + (targetProperty ? '.' + targetProperty : '');
+        expr = expr.object;
       }
       return targetProperty;
     };

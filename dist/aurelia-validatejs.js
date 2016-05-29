@@ -229,6 +229,7 @@ export class ValidateBindingBehavior {
     let reporter;
     targetProperty = this.getTargetProperty(binding);
     target = this.getPropertyContext(source, targetProperty);
+    // target = target.model ? target.model: target;
     reporter = this.getReporter(target);
     reporter.subscribe(errors => {
       let relevantErrors = errors.filter(error => {
@@ -242,8 +243,10 @@ export class ValidateBindingBehavior {
   }
   getTargetProperty(binding) {
     let targetProperty;
-    if (binding.sourceExpression && binding.sourceExpression.expression && binding.sourceExpression.expression.name) {
-      targetProperty = binding.sourceExpression.expression.name;
+    let expr = binding.sourceExpression.expression;
+    while (expr) {
+      targetProperty = expr.name + (targetProperty ? '.' + targetProperty : '');
+      expr = expr.object;
     }
     return targetProperty;
   }

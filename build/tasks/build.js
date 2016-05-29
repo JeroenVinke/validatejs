@@ -81,7 +81,7 @@ gulp.task('build-dts', function(){
       .pipe(gulp.dest(paths.output + 'system'));
 });
 
-gulp.task('build-sample', ['build-sample-html'], function () {
+gulp.task('build-sample-js', function () {
   return gulp.src(paths.sample + '/src/**/*.js')
     .pipe(to5(assign({}, removeDTSPlugin(compilerOptions.amd()))))
     .pipe(gulp.dest(paths.sample + '/dist'));
@@ -91,6 +91,16 @@ gulp.task('build-sample-html', function () {
     .pipe(gulp.dest(paths.sample + '/dist'));
 });
 
+gulp.task('build-sample', function(callback) {
+  return runSequence(
+    'clean-sample',
+    'build-sample-js',
+    'build-sample-html',
+    callback
+  );
+});
+
+
 gulp.task('build', function(callback) {
   return runSequence(
     'clean',
@@ -98,6 +108,14 @@ gulp.task('build', function(callback) {
     ['build-es2015-temp', 'build-es2015', 'build-commonjs', 'build-amd', 'build-system'],
     'build-dts',
     'clean-temp',
+    callback
+  );
+});
+
+gulp.task('build-all', function(callback) {
+  return runSequence(
+    'build',
+    'build-sample',
     callback
   );
 });

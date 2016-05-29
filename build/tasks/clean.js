@@ -12,3 +12,8 @@ gulp.task('clean-temp', function() {
   return gulp.src([paths.output + '/temp'])
     .pipe(vinylPaths(del));
 });
+
+gulp.task('clean-sample', function() {
+  return gulp.src([paths.sample + '/dist'])
+    .pipe(vinylPaths(del));
+});

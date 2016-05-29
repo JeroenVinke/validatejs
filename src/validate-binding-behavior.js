@@ -14,6 +14,7 @@ export class ValidateBindingBehavior {
     let reporter;
     targetProperty = this.getTargetProperty(binding);
     target = this.getPropertyContext(source, targetProperty);
+    // target = target.model ? target.model: target;
     reporter = this.getReporter(target);
     reporter.subscribe(errors => {
       let relevantErrors = errors.filter(error => {
