@@ -74,4 +74,8 @@ export let Validator = class Validator {
     this.config.addRule(this.currentProperty, ValidationRule.url(configuration));
     return this;
   }
+  errorHandler(configuration) {
+    this.config.addRule(this.currentProperty, ValidationRule.errorHandler(configuration));
+    return this;
+  }
 };

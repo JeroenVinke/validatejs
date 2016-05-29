@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ValidationRenderer = exports.ValidationReporter = exports.Validator = exports.ValidationEngine = exports.numericality = exports.url = exports.format = exports.inclusion = exports.exclusion = exports.equality = exports.email = exports.datetime = exports.date = exports.required = exports.length = undefined;
+exports.ValidationRenderer = exports.ValidationReporter = exports.Validator = exports.ValidationEngine = exports.errorHandler = exports.numericality = exports.url = exports.format = exports.inclusion = exports.exclusion = exports.equality = exports.email = exports.datetime = exports.date = exports.required = exports.length = undefined;
 
 var _decorators = require('./decorators');
 
@@ -73,6 +73,12 @@ Object.defineProperty(exports, 'numericality', {
     return _decorators.numericality;
   }
 });
+Object.defineProperty(exports, 'errorHandler', {
+  enumerable: true,
+  get: function get() {
+    return _decorators.errorHandler;
+  }
+});
 
 var _validationEngine = require('./validation-engine');
 
@@ -113,8 +119,17 @@ exports.configure = configure;
 
 var _aureliaValidation = require('aurelia-validation');
 
-function configure(config) {
-  config.container.registerHandler(_aureliaValidation.Validator, _validator.Validator);
-  config.container.registerHandler(_aureliaValidation.ValidationReporter, _validationReporter.ValidationReporter);
-  config.globalResources('./validate-binding-behavior');
+var _validationConfig = require('./validation-config');
+
+var _configBuilder = require('./config-builder');
+
+function configure(aurelia, config) {
+  aurelia.container.registerHandler(_aureliaValidation.Validator, _validator.Validator);
+  aurelia.container.registerHandler(_aureliaValidation.ValidationReporter, _validationReporter.ValidationReporter);
+  aurelia.globalResources('./validate-binding-behavior');
+
+  _validationConfig.ValidationConfig.prototype.configBuilder = new _configBuilder.ConfigBuilder();
+  if (config !== undefined && typeof config === 'function') {
+    config(_validationConfig.ValidationConfig.prototype.configBuilder);
+  }
 }

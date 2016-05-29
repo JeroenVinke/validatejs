@@ -1,69 +1,81 @@
-import {DOM} from 'aurelia-pal';
 import {ValidationError} from 'aurelia-validation';
-import {inject} from 'aurelia-dependency-injection';
+import {DOM} from 'aurelia-pal';
 import {metadata} from 'aurelia-metadata';
+import {inject} from 'aurelia-dependency-injection';
+import {getContextFor} from 'aurelia-binding';
 
-export class ValidationRenderer {
-  renderErrors(node, relevantErrors) {
-    this.unrenderErrors(node);
-    if (relevantErrors.length) {
-      node.parentElement.classList.add('has-error');
-      relevantErrors.forEach(error => {
-        if (node.parentElement.textContent.indexOf(error.message) === -1) {
-          let errorMessageHelper = DOM.createElement('span');
-          let errorMessageNode = DOM.createTextNode(error.message);
-          errorMessageHelper.appendChild(errorMessageNode);
-          errorMessageHelper.classList.add('help-block', 'au-validation');
-          node.parentElement.appendChild(errorMessageHelper);
-        }
-      });
+import validate from 'validate.js';
+export class ValidationRule {
+  name = '';
+  config;
+  constructor(name, config, validateJS = true) {
+    this.name = name;
+    this.config = config;
+    this.validateJS = validateJS;
+  }
+  validate(target, propName) {
+    if (target && propName && this.validateJS) {
+      let validator = { [propName]: { [this.name]: this.config } };
+      let result = validate(target, validator);
+      if (result) {
+        let error = cleanResult(result);
+        result = new ValidationError(Object.assign(error, { rule: this.name }));
+      }
+      return result;
+    } else if (!target || !propName) {
+      throw new Error('Invalid target or property name.');
     }
   }
-  unrenderErrors(node) {
-    let deleteThese = [];
-    node.parentElement.classList.remove('has-error');
-    let children = node.parentElement.children;
-    for (let i = 0; i < children.length; i++) {
-      let child = children[i];
-      if (child.classList.contains('help-block') && child.classList.contains('au-validation')) {
-        deleteThese.push(child);
-      }
-    }
-    deleteThese.forEach(child => {
-      node.parentElement.removeChild(child);
-    });
+  static date(config = true) {
+    return new ValidationRule('date', config);
+  }
+  static datetime(config = true) {
+    return new ValidationRule('datetime', config);
+  }
+  static email(config = true) {
+    return new ValidationRule('email', config);
+  }
+  static equality(config) {
+    return new ValidationRule('equality', config);
+  }
+  static exclusion(config) {
+    return new ValidationRule('exclusion', config);
+  }
+  static format(config) {
+    return new ValidationRule('format', config);
+  }
+  static inclusion(config) {
+    return new ValidationRule('inclusion', config);
+  }
+  static lengthRule(config) {
+    return new ValidationRule('length', config);
+  }
+  static numericality(config = true) {
+    return new ValidationRule('numericality', config);
+  }
+  static presence(config = true) {
+    return new ValidationRule('presence', config);
+  }
+  static url(config = true) {
+    return new ValidationRule('url', config);
+  }
+  static errorHandler(callback) {
+    return new ValidationRule('errorHandler', callback, false);
   }
 }
 
-export class ValidationConfig {
-  __validationRules__ = [];
-  addRule(key, rule) {
-    this.__validationRules__.push({ key: key, rule: rule });
+export function cleanResult(data) {
+  let result = {};
+  for (let prop in data) {
+    if (data.hasOwnProperty(prop)) {
+      result = {
+        propertyName: prop,
+        message: data[prop][0]
+      };
+    }
   }
-  validate(instance, reporter, key) {
-    let errors = [];
-    this.__validationRules__.forEach(rule => {
-      if (!key || key === rule.key) {
-        let result = rule.rule.validate(instance, rule.key);
-        if (result) {
-          errors.push(result);
-        }
-      }
-    });
-    reporter.publish(errors);
-    return errors;
-  }
-  getValidationRules() {
-    return this.__validationRules__ || (this.__validationRules__ = aggregateValidationRules(this));
-  }
-  aggregateValidationRules() {
-    console.error('not yet implemented');
-    //get __validationRules__ from class using metadata
-    //merge with any instance specific __validationRules__
-  }
+  return result;
 }
-
-export const validationMetadataKey = 'aurelia:validation';
 
 function getRandomId() {
   let rand = Math.floor(Math.random() * (99999 - 10000 + 1)) + 10000;
@@ -104,119 +116,96 @@ export class ValidationReporter {
   }
 }
 
-import validate from 'validate.js';
-export class ValidationRule {
-  name = '';
-  config;
-  constructor(name, config) {
-    this.name = name;
-    this.config = config;
-  }
-  validate(target, propName) {
-    if (target && propName) {
-      let validator = { [propName]: { [this.name]: this.config } };
-      let result = validate(target, validator);
-      if (result) {
-        let error = cleanResult(result);
-        result = new ValidationError(error);
-      }
-      return result;
-    }
-    throw new Error('Invalid target or property name.');
-  }
-  static date(config = true) {
-    return new ValidationRule('date', config);
-  }
-  static datetime(config = true) {
-    return new ValidationRule('datetime', config);
-  }
-  static email(config = true) {
-    return new ValidationRule('email', config);
-  }
-  static equality(config) {
-    return new ValidationRule('equality', config);
-  }
-  static exclusion(config) {
-    return new ValidationRule('exclusion', config);
-  }
-  static format(config) {
-    return new ValidationRule('format', config);
-  }
-  static inclusion(config) {
-    return new ValidationRule('inclusion', config);
-  }
-  static lengthRule(config) {
-    return new ValidationRule('length', config);
-  }
-  static numericality(config = true) {
-    return new ValidationRule('numericality', config);
-  }
-  static presence(config = true) {
-    return new ValidationRule('presence', config);
-  }
-  static url(config = true) {
-    return new ValidationRule('url', config);
-  }
-}
-
-export function cleanResult(data) {
-  let result = {};
-  for (let prop in data) {
-    if (data.hasOwnProperty(prop)) {
-      result = {
-        propertyName: prop,
-        message: data[prop][0]
-      };
-    }
-  }
-  return result;
-}
-
-@inject(ValidationRenderer)
-export class ValidateBindingBehavior {
-  constructor(renderer) {
-    this.renderer = renderer;
-  }
-  bind(binding, source) {
-    let targetProperty;
-    // let target;
-    let reporter;
-    targetProperty = this.getTargetProperty(binding);
-    // target = this.getPropertyContext(source, targetProperty);
-    reporter = this.getReporter(source);
-    // reporter = ValidationEngine.getValidationReporter(target);
-    reporter.subscribe(errors => {
-      let relevantErrors = errors.filter(error => {
-        return error.propertyName === targetProperty;
+export class ValidationRenderer {
+  renderErrors(node, relevantErrors) {
+    this.unrenderErrors(node);
+    if (relevantErrors.length) {
+      node.parentElement.classList.add('has-error');
+      relevantErrors.forEach(error => {
+        if (node.parentElement.textContent.indexOf(error.message) === -1) {
+          let errorMessageHelper = DOM.createElement('span');
+          let errorMessageNode = DOM.createTextNode(error.message);
+          errorMessageHelper.appendChild(errorMessageNode);
+          errorMessageHelper.classList.add('help-block', 'au-validation');
+          node.parentElement.appendChild(errorMessageHelper);
+        }
       });
-      this.renderer.renderErrors(binding.target, relevantErrors);
+    }
+  }
+  unrenderErrors(node) {
+    let deleteThese = [];
+    node.parentElement.classList.remove('has-error');
+    let children = node.parentElement.children;
+    for (let i = 0; i < children.length; i++) {
+      let child = children[i];
+      if (child.classList.contains('help-block') && child.classList.contains('au-validation')) {
+        deleteThese.push(child);
+      }
+    }
+    deleteThese.forEach(child => {
+      node.parentElement.removeChild(child);
     });
   }
-  unbind(binding, source) {
-    // let targetProperty = this.getTargetProperty(source);
-    // let target = this.getPropertyContext(source, targetProperty);
-    // let reporter = this.getReporter(source);
+}
+
+export class ConfigBuilder {
+  useTranslation(callback) {
+    this.translationCallback = callback;
   }
-  getTargetProperty(binding) {
-    let targetProperty;
-    if (binding.sourceExpression && binding.sourceExpression.expression && binding.sourceExpression.expression.name) {
-      targetProperty = binding.sourceExpression.expression.name;
+}
+
+export const validationMetadataKey = 'aurelia:validation';
+
+export class ValidationConfig {
+  __validationRules__ = [];
+  addRule(key, rule) {
+    this.__validationRules__.push({ key: key, rule: rule });
+  }
+  validate(instance, reporter, key) {
+    let errors = [];
+    this.__validationRules__.forEach(rule => {
+      if (!key || key === rule.key) {
+        let result = rule.rule.validate(instance, rule.key);
+        if (result) {
+          errors.push(this.translateError(result));
+        }
+      }
+    });
+    reporter.publish(errors);
+    return errors;
+  }
+  translateError(error) {
+    let service = this.getTranslationService(error.propertyName);
+    if (service) {
+      let msg = service(error);
+      if (msg) { // if null/undefined is returned, keep the default message
+        error.message = msg;
+      }
     }
-    return targetProperty;
+    return error;
   }
-  getPropertyContext(source, targetProperty) {
-    let target = getContextFor(source, targetProperty);
-    return target;
-  }
-  getReporter(source) {
-    let reporter;
-    if (source.bindingContext.reporter) {
-      reporter = source.bindingContext.reporter;
+  getTranslationService(key) {
+    // is there an errorHandler rule for this key?
+    // .errorHandler(error => return something)
+    let errorHandler = this.__validationRules__.find(r => r.key === key && r.rule.name === 'errorHandler');
+    if (errorHandler) {
+      errorHandler = errorHandler.rule.config;
     } else {
-      let parentContext = source.overrideContext.parentOverrideContext;
-      reporter = parentContext.bindingContext.reporter;
+      // check if a global translation callback has been set in the configBuilder
+      let configBuilder = ValidationConfig.prototype.configBuilder;
+      if (configBuilder.translationCallback) {
+        errorHandler = configBuilder.translationCallback;
+      }
     }
-    return reporter;
+    return errorHandler;
+  }
+  getValidationRules() {
+    return this.__validationRules__ || (this.__validationRules__ = aggregateValidationRules(this));
+  }
+  aggregateValidationRules() {
+    console.error('not yet implemented');
+    //get __validationRules__ from class using metadata
+    //merge with any instance specific __validationRules__
   }
 }
 
@@ -226,9 +215,8 @@ export class ValidationEngine {
   }
 }
 
-export function observeProperty(target, key, descriptor, targetOrConfig, rule) {
+export function observeProperty(target, key, descriptor) {
   let config = metadata.getOrCreateOwn(validationMetadataKey, ValidationConfig, target);
-  config.addRule(key, rule(targetOrConfig));
 
   // TODO: REMOVE
   let innerPropertyName = `_${key}`;
@@ -263,6 +251,46 @@ export function observeProperty(target, key, descriptor, targetOrConfig, rule) {
 
   if (!babel) {
     Reflect.defineProperty(target, key, descriptor);
+  }
+}
+
+@inject(ValidationRenderer)
+export class ValidateBindingBehavior {
+  constructor(renderer) {
+    this.renderer = renderer;
+  }
+  bind(binding, source, elem) {
+    let targetProperty;
+    let target;
+    let reporter;
+    targetProperty = this.getTargetProperty(binding);
+    target = this.getPropertyContext(source, targetProperty);
+    reporter = this.getReporter(target);
+    reporter.subscribe(errors => {
+      let relevantErrors = errors.filter(error => {
+        return error.propertyName === targetProperty;
+      });
+      this.renderer.renderErrors(elem ? elem : binding.target, relevantErrors);
+    });
+  }
+  unbind(binding, source) {
+    // TODO: destroy yourself, gracefully
+  }
+  getTargetProperty(binding) {
+    let targetProperty;
+    let expr = binding.sourceExpression.expression;
+    while (expr) {
+      targetProperty = expr.name + (targetProperty ? '.' + targetProperty : '');
+      expr = expr.object;
+    }
+    return targetProperty;
+  }
+  getPropertyContext(source, targetProperty) {
+    let target = getContextFor(targetProperty, source, 0);
+    return target;
+  }
+  getReporter(target) {
+    return ValidationEngine.getValidationReporter(target);
   }
 }
 
@@ -338,17 +366,27 @@ export class Validator {
     this.config.addRule(this.currentProperty, ValidationRule.url(configuration));
     return this;
   }
+  errorHandler(configuration) {
+    this.config.addRule(this.currentProperty, ValidationRule.errorHandler(configuration));
+    return this;
+  }
 }
 
 export function base(targetOrConfig, key, descriptor, rule) {
   if (key) {
     let target = targetOrConfig;
     targetOrConfig = null;
-    return observeProperty(target, key, descriptor, targetOrConfig, rule);
+    return addRule(target, key, descriptor, targetOrConfig, rule);
   }
   return function(t, k, d) {
-    return observeProperty(t, k, d, targetOrConfig, rule);
+    return addRule(t, k, d, targetOrConfig, rule);
   };
+}
+
+export function addRule(target, key, descriptor, targetOrConfig, rule) {
+  let config = metadata.getOrCreateOwn(validationMetadataKey, ValidationConfig, target);
+  config.addRule(key, rule(targetOrConfig));
+  return observeProperty(target, key, descriptor, targetOrConfig, rule);
 }
 
 export function length(targetOrConfig, key, descriptor) {
@@ -397,4 +435,8 @@ export function url(targetOrConfig, key, descriptor) {
 
 export function numericality(targetOrConfig, key, descriptor) {
   return base(targetOrConfig, key, descriptor, ValidationRule.numericality);
+}
+
+export function errorHandler(targetOrConfig, key, descriptor) {
+  return base(targetOrConfig, key, descriptor, ValidationRule.errorHandler);
 }

@@ -18,27 +18,31 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var ValidationRule = exports.ValidationRule = function () {
   function ValidationRule(name, config) {
+    var validateJS = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+
     _classCallCheck(this, ValidationRule);
 
     this.name = '';
 
     this.name = name;
     this.config = config;
+    this.validateJS = validateJS;
   }
 
   ValidationRule.prototype.validate = function validate(target, propName) {
-    if (target && propName) {
+    if (target && propName && this.validateJS) {
       var _propName, _validator;
 
       var validator = (_validator = {}, _validator[propName] = (_propName = {}, _propName[this.name] = this.config, _propName), _validator);
       var result = (0, _validate3.default)(target, validator);
       if (result) {
         var error = cleanResult(result);
-        result = new _aureliaValidation.ValidationError(error);
+        result = new _aureliaValidation.ValidationError(Object.assign(error, { rule: this.name }));
       }
       return result;
+    } else if (!target || !propName) {
+      throw new Error('Invalid target or property name.');
     }
-    throw new Error('Invalid target or property name.');
   };
 
   ValidationRule.date = function date() {
@@ -95,6 +99,10 @@ var ValidationRule = exports.ValidationRule = function () {
     var config = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
 
     return new ValidationRule('url', config);
+  };
+
+  ValidationRule.errorHandler = function errorHandler(callback) {
+    return new ValidationRule('errorHandler', callback, false);
   };
 
   return ValidationRule;

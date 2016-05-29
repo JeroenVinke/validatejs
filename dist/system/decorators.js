@@ -80,6 +80,12 @@ System.register(['./validation-rule', './base-decorator'], function (_export, _c
       }
 
       _export('numericality', numericality);
+
+      function errorHandler(targetOrConfig, key, descriptor) {
+        return base(targetOrConfig, key, descriptor, ValidationRule.errorHandler);
+      }
+
+      _export('errorHandler', errorHandler);
     }
   };
 });

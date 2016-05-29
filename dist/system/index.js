@@ -1,7 +1,7 @@
 'use strict';
 
-System.register(['./decorators', './validation-engine', 'aurelia-validation', './validator', './validation-reporter', './validation-renderer'], function (_export, _context) {
-  var Validator, ValidateJSValidator, ValidationReporter, ValidateJSReporter;
+System.register(['./decorators', './validation-engine', 'aurelia-validation', './validator', './validation-reporter', './validation-renderer', './validation-config', './config-builder'], function (_export, _context) {
+  var Validator, ValidateJSValidator, ValidationReporter, ValidateJSReporter, ValidationConfig, ConfigBuilder;
   return {
     setters: [function (_decorators) {
       var _exportObj = {};
@@ -16,6 +16,7 @@ System.register(['./decorators', './validation-engine', 'aurelia-validation', '.
       _exportObj.format = _decorators.format;
       _exportObj.url = _decorators.url;
       _exportObj.numericality = _decorators.numericality;
+      _exportObj.errorHandler = _decorators.errorHandler;
 
       _export(_exportObj);
     }, function (_validationEngine) {
@@ -43,12 +44,21 @@ System.register(['./decorators', './validation-engine', 'aurelia-validation', '.
       _exportObj5.ValidationRenderer = _validationRenderer.ValidationRenderer;
 
       _export(_exportObj5);
+    }, function (_validationConfig) {
+      ValidationConfig = _validationConfig.ValidationConfig;
+    }, function (_configBuilder) {
+      ConfigBuilder = _configBuilder.ConfigBuilder;
     }],
     execute: function () {
-      function configure(config) {
-        config.container.registerHandler(Validator, ValidateJSValidator);
-        config.container.registerHandler(ValidationReporter, ValidateJSReporter);
-        config.globalResources('./validate-binding-behavior');
+      function configure(aurelia, config) {
+        aurelia.container.registerHandler(Validator, ValidateJSValidator);
+        aurelia.container.registerHandler(ValidationReporter, ValidateJSReporter);
+        aurelia.globalResources('./validate-binding-behavior');
+
+        ValidationConfig.prototype.configBuilder = new ConfigBuilder();
+        if (config !== undefined && typeof config === 'function') {
+          config(ValidationConfig.prototype.configBuilder);
+        }
       }
 
       _export('configure', configure);

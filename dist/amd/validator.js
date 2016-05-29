@@ -100,6 +100,11 @@ define(['exports', './metadata-key', './validation-config', './validation-engine
       return this;
     };
 
+    Validator.prototype.errorHandler = function errorHandler(configuration) {
+      this.config.addRule(this.currentProperty, _validationRule.ValidationRule.errorHandler(configuration));
+      return this;
+    };
+
     return Validator;
   }();
 });
